@@ -15,6 +15,7 @@ class Main:
         self.correctPair = 0
         self.tries = 0
         self.wins = 0
+        self.footer = None
 
     def startScreen(self):
         self.root = tk.Tk()
@@ -55,6 +56,7 @@ class Main:
 
         # Inicializar figuras baseadas no valor inicial de pairs
         self.initializeFigures()
+        self.rootFooter()
 
         self.startGameButton = tk.Button(self.root, text="Iniciar Jogo", command=self.startGame, font=("Helvetica", 16), bg="#f0f0f0")
         self.startGameButton.pack(pady=20)
@@ -187,6 +189,7 @@ class Main:
             def showImage(btn=figLabel, img=figPhotoImg, figurePath=figure):
                 btn.config(image=img)
                 self.tries += 1
+                self.rootFooter()
                 if self.lastClickedImg == figurePath:
                     self.setCorrectCombination(figurePath)
                     self.lastClickedImg = None
@@ -203,6 +206,8 @@ class Main:
             figLabel.pack(side=tk.LEFT, padx=5)
             
             buttonCount += 1
+
+        self.rootFooter()
 
     def setCorrectCombination(self, figurePath):
         for widget in self.root.winfo_children():
@@ -234,9 +239,10 @@ class Main:
     def checkGameCompletion(self):
         if self.correctPair == len(self.usedFigures):
             self.wins += 1
+            self.rootFooter()
             completionMessage = tk.Toplevel(self.root)
             completionMessage.title("Parabéns!")
-            completionMessage.geometry("300x200")
+            completionMessage.geometry("400x200")
             completionMessage.resizable(False, False)
             completionMessage.configure(bg="#f0f0f0")
             messageLabel = tk.Label(completionMessage, text="Parabéns!\nVocê completou o jogo!\nAo clicar em fechar o jogo será reiniciado!", font=("Helvetica", 14), bg="#f0f0f0")
@@ -255,6 +261,18 @@ class Main:
         if self.root:
             self.root.destroy()
         self.startScreen()
+
+    def rootFooter(self):
+        if self.footer:
+            try:
+                self.footer.destroy()
+            except Exception as e:
+                self.footer = None
+        self.footer = tk.Label(self.root, text=f"Tentativas: {self.tries} | Vitórias: {self.wins}", font=("Helvetica", 12), bg="#f0f0f0")
+        self.footer.pack(side=tk.BOTTOM, pady=10)
+        self.root.update()
+
+
 if __name__ == "__main__":
     main = Main()
     main.startScreen()
