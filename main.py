@@ -12,6 +12,9 @@ class Main:
         self.usedFigures = []
         self.figsMenuFrame = None
         self.lastClickedImg = None
+        self.correctPair = 0
+        self.tries = 0
+        self.wins = 0
 
     def startScreen(self):
         self.root = tk.Tk()
@@ -183,6 +186,7 @@ class Main:
             # Função para mostrar a imagem ao clicar
             def showImage(btn=figLabel, img=figPhotoImg, figurePath=figure):
                 btn.config(image=img)
+                self.tries += 1
                 if self.lastClickedImg == figurePath:
                     self.setCorrectCombination(figurePath)
                     self.lastClickedImg = None
@@ -208,7 +212,9 @@ class Main:
                         for btn in frame_child.winfo_children():
                             if isinstance(btn, tk.Button) and hasattr(btn, "figure_path"):
                                 if btn.figure_path == figurePath:
+                                    self.correctPair += 1
                                     btn.config(bg="#90ee90", state=tk.DISABLED)  # verde claro
+                                    self.checkGameCompletion()
 
     def hideWrongCombination(self, figurePath, lastClickedImg):
         # Função para esconder as cartas após o delay
@@ -225,6 +231,30 @@ class Main:
         # Agendar a função para ser executada após 800ms
         self.root.after(800, hideCards)
 
+    def checkGameCompletion(self):
+        if self.correctPair == len(self.usedFigures):
+            self.wins += 1
+            completionMessage = tk.Toplevel(self.root)
+            completionMessage.title("Parabéns!")
+            completionMessage.geometry("300x200")
+            completionMessage.resizable(False, False)
+            completionMessage.configure(bg="#f0f0f0")
+            messageLabel = tk.Label(completionMessage, text="Parabéns!\nVocê completou o jogo!\nAo clicar em fechar o jogo será reiniciado!", font=("Helvetica", 14), bg="#f0f0f0")
+            messageLabel.pack(pady=20)
+            # Reiniciar o jogo ao fechar a mensagem
+            def close_and_restart():
+                completionMessage.destroy()
+                self.restartGame()
+            completionMessage.protocol("WM_DELETE_WINDOW", close_and_restart)
+            closeButton = tk.Button(completionMessage, text="Fechar", command=close_and_restart, font=("Helvetica", 14), bg="#f0f0f0")
+            closeButton.pack(pady=10)
+
+    def restartGame(self):
+        self.usedFigures = []
+        self.correctPair = 0
+        if self.root:
+            self.root.destroy()
+        self.startScreen()
 if __name__ == "__main__":
     main = Main()
     main.startScreen()
