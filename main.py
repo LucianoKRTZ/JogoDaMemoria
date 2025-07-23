@@ -11,6 +11,7 @@ class Main:
         self.maxPairs = len([i for i in os.listdir(self.tools.assetsPath) if i.lower().startswith("fig-")])
         self.usedFigures = []
         self.figsMenuFrame = None
+        self.lastClickedImg = None
 
     def startScreen(self):
         self.root = tk.Tk()
@@ -123,6 +124,88 @@ class Main:
             figLabel.image = figPhotoImg  # Prevent garbage collection
             figLabel.pack(side=tk.LEFT, padx=5)
 
+    def startGame(self):
+        self.root.destroy()
+        self.root = tk.Tk()
+        self.root.title("Jogo da Memória")
+        self.root.geometry("600x400+0+0")
+        self.root.resizable(False, False)
+        self.root.configure(bg="#f0f0f0")
+        self.createGameScreen()
+        self.root.mainloop()
+
+    def createGameScreen(self):
+        # Placeholder for game screen creation logic
+        title = tk.Label(self.root, text="Jogo da Memória", font=("Helvetica", 24), bg="#f0f0f0")
+        title.pack(pady=20)
+
+        # Frame para organizar as figuras escolhidas
+        figuresFrame = tk.Frame(self.root, bg="#f0f0f0")
+        figuresFrame.pack(pady=20)
+
+        # Criar pares de figuras (duplicar cada figura)
+        self.shuffledFigures = self.tools.shuffleFigures(self.usedFigures)
+        
+        # Display the chosen figures
+        for figure in self.shuffledFigures:
+           
+            figPhotoImg = tk.PhotoImage(file=figure)
+            
+            # Definir o tamanho desejado (original + 10 pixels)
+            zoomedWidth = figPhotoImg.width() + 10
+            zoomedHeight = figPhotoImg.height() + 10
+            
+            # Criar placeholder do tamanho desejado
+            placeholder = tk.PhotoImage(width=zoomedWidth, height=zoomedHeight)
+            
+            figLabel = tk.Button(
+                figuresFrame,
+                image=placeholder,  # Inicialmente com placeholder
+                bg="#ffc290",
+                borderwidth=1,
+                highlightthickness=1,
+                relief=tk.RAISED,
+                width=zoomedWidth,
+                height=zoomedHeight
+            )
+            # Armazenar a figura original para comparação
+            figLabel.figure_path = figure
+            
+            # Função para mostrar a imagem ao clicar
+            def showImage(btn=figLabel, img=figPhotoImg, figurePath=figure):
+                btn.config(image=img)
+                if self.lastClickedImg == figurePath:
+                    self.setCorrectCombination(figurePath)
+                    self.lastClickedImg = None
+                elif self.lastClickedImg is not None and \
+                     self.lastClickedImg != figurePath:
+
+                    self.hideWrongCombination(figurePath, self.lastClickedImg)
+                    self.lastClickedImg = None
+                else:
+                    self.lastClickedImg = figurePath
+            figLabel.config(command=showImage)
+            figLabel.image = figPhotoImg  # Prevent garbage collection
+            figLabel.placeholder = placeholder  # Prevent garbage collection do placeholder
+            figLabel.pack(side=tk.LEFT, padx=5)
+
+    def setCorrectCombination(self, figurePath):
+        for widget in self.root.winfo_children():
+            if isinstance(widget, tk.Frame):
+                for btn in widget.winfo_children():
+                    if isinstance(btn, tk.Button) and hasattr(btn, "figure_path"):
+                        if btn.figure_path == figurePath:
+                            btn.config(bg="#90ee90", state=tk.DISABLED)  # verde claro
+
+    def hideWrongCombination(self, figurePath, lastClickedImg):
+        self.root.update()
+        self.root.after(800)
+        for widget in self.root.winfo_children():
+            if isinstance(widget, tk.Frame):
+                for btn in widget.winfo_children():
+                    if isinstance(btn, tk.Button) and hasattr(btn, "figure_path"):
+                        if btn.figure_path == figurePath or btn.figure_path == lastClickedImg:
+                            btn.config(image=btn.placeholder, bg="#ffc290", state=tk.NORMAL)
 
 if __name__ == "__main__":
     main = Main()

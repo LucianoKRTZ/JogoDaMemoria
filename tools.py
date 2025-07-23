@@ -11,3 +11,12 @@ class Tools:
         availableFigures = [fig for fig in allFigures if os.path.join(self.assetsPath, fig) not in usedFigures and fig.startswith("fig-")]
         if availableFigures:
             return os.path.join(self.assetsPath, random.choice(availableFigures))
+        
+    def shuffleFigures(self, figures:list):
+        random.shuffle(figures)
+        randTwo = random.sample(figures, len(figures))
+        for i in randTwo:
+            figures.append(i)
+
+        random.shuffle(figures)
+        return figures
