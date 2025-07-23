@@ -139,16 +139,25 @@ class Main:
         title = tk.Label(self.root, text="Jogo da Memória", font=("Helvetica", 24), bg="#f0f0f0")
         title.pack(pady=20)
 
-        # Frame para organizar as figuras escolhidas
-        figuresFrame = tk.Frame(self.root, bg="#f0f0f0")
-        figuresFrame.pack(pady=20)
+        # Frame principal para organizar as figuras escolhidas
+        mainFiguresFrame = tk.Frame(self.root, bg="#f0f0f0")
+        mainFiguresFrame.pack(pady=20)
 
         # Criar pares de figuras (duplicar cada figura)
         self.shuffledFigures = self.tools.shuffleFigures(self.usedFigures)
         
+        # Variáveis para controlar as linhas
+        buttonsPerRow = 4
+        currentRow = None
+        buttonCount = 0
+        
         # Display the chosen figures
-        for figure in self.shuffledFigures:
-           
+        for idx, figure in enumerate(self.shuffledFigures):
+            # Criar nova linha a cada 7 botões
+            if buttonCount % buttonsPerRow == 0:
+                currentRow = tk.Frame(mainFiguresFrame, bg="#f0f0f0")
+                currentRow.pack(pady=5)
+        
             figPhotoImg = tk.PhotoImage(file=figure)
             
             # Definir o tamanho desejado (original + 10 pixels)
@@ -159,7 +168,7 @@ class Main:
             placeholder = tk.PhotoImage(width=zoomedWidth, height=zoomedHeight)
             
             figLabel = tk.Button(
-                figuresFrame,
+                currentRow,  # Usar currentRow em vez de figuresFrame
                 image=placeholder,  # Inicialmente com placeholder
                 bg="#ffc290",
                 borderwidth=1,
@@ -188,24 +197,33 @@ class Main:
             figLabel.image = figPhotoImg  # Prevent garbage collection
             figLabel.placeholder = placeholder  # Prevent garbage collection do placeholder
             figLabel.pack(side=tk.LEFT, padx=5)
+            
+            buttonCount += 1
 
     def setCorrectCombination(self, figurePath):
         for widget in self.root.winfo_children():
-            if isinstance(widget, tk.Frame):
-                for btn in widget.winfo_children():
-                    if isinstance(btn, tk.Button) and hasattr(btn, "figure_path"):
-                        if btn.figure_path == figurePath:
-                            btn.config(bg="#90ee90", state=tk.DISABLED)  # verde claro
+            if isinstance(widget, tk.Frame):  # mainFiguresFrame
+                for frame_child in widget.winfo_children():
+                    if isinstance(frame_child, tk.Frame):  # currentRow frames
+                        for btn in frame_child.winfo_children():
+                            if isinstance(btn, tk.Button) and hasattr(btn, "figure_path"):
+                                if btn.figure_path == figurePath:
+                                    btn.config(bg="#90ee90", state=tk.DISABLED)  # verde claro
 
     def hideWrongCombination(self, figurePath, lastClickedImg):
-        self.root.update()
-        self.root.after(800)
-        for widget in self.root.winfo_children():
-            if isinstance(widget, tk.Frame):
-                for btn in widget.winfo_children():
-                    if isinstance(btn, tk.Button) and hasattr(btn, "figure_path"):
-                        if btn.figure_path == figurePath or btn.figure_path == lastClickedImg:
-                            btn.config(image=btn.placeholder, bg="#ffc290", state=tk.NORMAL)
+        # Função para esconder as cartas após o delay
+        def hideCards():
+            for widget in self.root.winfo_children():
+                if isinstance(widget, tk.Frame):  # mainFiguresFrame
+                    for frame_child in widget.winfo_children():
+                        if isinstance(frame_child, tk.Frame):  # currentRow frames
+                            for btn in frame_child.winfo_children():
+                                if isinstance(btn, tk.Button) and hasattr(btn, "figure_path"):
+                                    if btn.figure_path == figurePath or btn.figure_path == lastClickedImg:
+                                        btn.config(image=btn.placeholder, bg="#ffc290", state=tk.NORMAL)
+        
+        # Agendar a função para ser executada após 800ms
+        self.root.after(800, hideCards)
 
 if __name__ == "__main__":
     main = Main()
